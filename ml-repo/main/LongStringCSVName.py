@@ -1,6 +1,6 @@
 import numpy
 
-channels = ["DI", "DII", "AVR", "AFL", "V1", "V2", "V3", "V4", "V5", "V6"]
+channels = ["DI", "DII", "DIII", "AVR", "AVL", "AVF", "V1", "V2", "V3", "V4", "V5", "V6"]
 
 partOfWave = ["width Q", "width R", "width S", "width R prime", "width S prime", "Num. of intrinsic deflections",
               "Ragged R wave", "Diphasic Derivation of R wave",
@@ -21,7 +21,7 @@ for e in channels:
     for i in amplitude:
         finStr = finStr + e + " " + i + ", "
 
-finStr = onceStr + finStr[:-2]
+finStr = onceStr + finStr[:-2] + ", Identifier"
 print(finStr)
 
 

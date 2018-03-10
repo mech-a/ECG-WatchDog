@@ -21,16 +21,13 @@ ecg_data = load_data()
 #plt.savefig("attribute_histogram_plots")
 #ecg_data["Height"].hist()
 #plt.show()
-imputer= Imputer(missing_values = "NaN", strategy= "mean")
-imputed_ecg =imputer.fit(ecg_data) 
-X=imputer.transform(ecg_data)
-ecg = pd.DataFrame(X, columns=ecg_data.columns)
-
 ecg_datawithoutlabel = ecg_data.drop('Identifier', axis=1)
+
+imputer= Imputer(missing_values = "NaN", strategy= "mean")
+X=imputer.fit_transform(ecg_datawithoutlabel)
 #ecg_datawithoutlabel = ecg_data.drop('Age', axis = 0)
-ecg_numpy_data = ecg_datawithoutlabel.as_matrix()
 
 x_train, y_train = X, ecg_data['Identifier']
 y_train_1= (y_train == 1)
 sgd_clf= SGDClassifier(max_iter=5,random_state=42,shuffle=True)
-sgd_clf.fit(x_train,y_train_1)
+Y = sgd_clf.fit(x_train,y_train_1)

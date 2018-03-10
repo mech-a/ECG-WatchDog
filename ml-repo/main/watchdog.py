@@ -26,8 +26,9 @@ ecg_datawithoutlabel = ecg_data.drop('Identifier', axis=1)
 imputer= Imputer(missing_values = "NaN", strategy= "mean")
 X=imputer.fit_transform(ecg_datawithoutlabel)
 #ecg_datawithoutlabel = ecg_data.drop('Age', axis = 0)
-
-x_train, y_train = X, ecg_data['Identifier']
+shuffle_index= np.random.permutation(361)
+x_train,x_test, y_train,y_test = X[:361],X[361:] ,ecg_data['Identifier'][:361],ecg_data['Identifier'][361:]
+x_train,y_train= x_train[shuffle_index], y_train[shuffle_index]
 y_train_1= (y_train == 1)
 sgd_clf= SGDClassifier(max_iter=5,random_state=42,shuffle=True)
 Y = sgd_clf.fit(x_train,y_train_1)

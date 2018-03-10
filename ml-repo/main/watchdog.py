@@ -16,6 +16,8 @@ csv_data = "https://raw.githubusercontent.com/V3SUV1US/ECG-WatchDog/master/ml-re
 
 def load_data():
     return pd.read_csv(csv_data, na_values= '?')
+
+
 ecg_data = load_data()
 #ecg_data.hist(bins=50, figsize=(20,15))
 #plt.savefig("attribute_histogram_plots")
@@ -24,11 +26,18 @@ ecg_data = load_data()
 ecg_datawithoutlabel = ecg_data.drop('Identifier', axis=1)
 
 imputer= Imputer(missing_values = "NaN", strategy= "mean")
-X=imputer.fit_transform(ecg_datawithoutlabel)
+imputer.fit(ecg_datawithoutlabel)
 #ecg_datawithoutlabel = ecg_data.drop('Age', axis = 0)
+X = imputer.transform(ecg_datawithoutlabel)
+
 shuffle_index= np.random.permutation(361)
 x_train,x_test, y_train,y_test = X[:361],X[361:] ,ecg_data['Identifier'][:361],ecg_data['Identifier'][361:]
 x_train,y_train= x_train[shuffle_index], y_train[shuffle_index]
-y_train_1= (y_train == 1)
-sgd_clf= SGDClassifier(max_iter=5,random_state=42,shuffle=True)
-Y = sgd_clf.fit(x_train,y_train_1)
+y_train_1 = (y_train == 1)
+
+sgd_clf= SGDClassifier(max_iter=10,random_state=42)
+
+
+sgd_clf.fit(x_train,y_train_1)
+
+prediction = sgd_clf.predict([X[50]])

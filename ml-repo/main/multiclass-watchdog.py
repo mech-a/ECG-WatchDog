@@ -40,9 +40,10 @@ heartdiseases = ('Normal', 'Ischemic changes', 'Old Anterior Myocardial Infarcti
 y_pos = np.arange(len(heartdiseases))
 occurences = [245,44,15,15,13,25,3,2,9,50,4,5,22]
  
-plt.barh(y_pos,occurences, align='center', alpha=0.5)
+plt.barh(y_pos, occurences, align='center', alpha=0.5)
 plt.yticks(y_pos, heartdiseases)
 plt.ylabel('Diseases in the Dataset')
+plt.xlabel('# of Occurences')
 plt.title('UCI Arrythmia Dataset Bar Graph')
 plt.show()
 
@@ -140,6 +141,8 @@ confusionmatovotrain = confusion_matrix(y_train, accuracyofOvOSGD)
 confusionmatSGDtrain = confusion_matrix(y_train, accuracyofSGD)
 confusionmatdttrain = confusion_matrix(y_train, accuracyofdt)
 confusionmatsvctrain = confusion_matrix(y_train, accuracyofsvc)
+row_sums_train = confusionmatrftrain.sum(axis=1, keepdims=True)
+
 
 confusionmatrftest = confusion_matrix(y_test, testpredsrf)
 confusionmatovotest = confusion_matrix(y_test, test_predsovo)
@@ -241,8 +244,9 @@ rects2 = plt.bar(index + bar_width, trainscaled, bar_width,alpha=0.1,
  
 plt.xlabel('Types of Classifiers')
 plt.ylabel('Mean Accuracy')
-plt.title('Scaled vs. Unscaled for train set')
+plt.title('Scaled vs. Unscaled for Train Set')
 plt.xticks(index + 0.2, ('OvO', 'Rf', 'SVC' ))
+plt.ylim([0, 1])
 plt.legend()
  
 
@@ -261,9 +265,10 @@ rects4 = plt.bar(index + bar_width, testscaled, bar_width,alpha=0.1,
  
 plt.xlabel('Types of Classifiers')
 plt.ylabel('Mean Accuracy')
-plt.title('Scaled vs. Unscaled for test set')
+plt.title('Scaled vs. Unscaled for Test Set')
 plt.xticks(index + 0.2, ('OvO', 'Rf', 'SVC' ))
-plt.legend()
+plt.ylim([0, 1])
+plt.legend(loc="upper right")
  
 
 plt.show()

@@ -152,7 +152,7 @@ def trainAndPlot(clf, name):
     fig2, ax2 = plt.subplots()
     width, height = norm_train_confusion_matrix.shape
     alphabet = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'
-    arrayalphabet= list(alphabet)
+   
     
     plt.matshow(norm_train_confusion_matrix, cmap=plt.cm.cool)
     plt.title('Prediction', y= 1.1)
@@ -173,6 +173,9 @@ def trainAndPlot(clf, name):
     plt.matshow(norm_test_confusion_matrix, cmap=plt.cm.cool)
     plt.title('Prediction', y= 1.1)
     plt.suptitle('Test Confusion Matrix of ' + name, fontsize=10, y=0.95)
+    plt.xticks(range(width), alphabet[:width])
+    #plt.xlabel('Prediction')
+    plt.yticks(range(height), alphabet[:height])
     plt.colorbar()
     plt.savefig("testconfusionmatrix"+name, format = 'svg')
 

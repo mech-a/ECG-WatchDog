@@ -161,7 +161,7 @@ def trainAndPlot(clf, name):
     #plt.xlabel('Prediction')
     plt.yticks(range(height), alphabet[:height])
     plt.ylabel('Actual')
-    plt.savefig("trainconfusionmatrix"+name, format = 'svg')
+    plt.savefig("trainconfusionmatrix"+name+'.svg', format = 'svg')
 
     
     plt.colorbar()
@@ -178,7 +178,7 @@ def trainAndPlot(clf, name):
     plt.yticks(range(height), alphabet[:height])
     plt.ylabel('Actual')
     plt.colorbar()
-    plt.savefig("testconfusionmatrix"+name, format = 'svg')
+    plt.savefig("testconfusionmatrix"+name+'.svg', format = 'svg')
 
     
     
@@ -196,7 +196,7 @@ def trainAndPlot(clf, name):
     plt.xticks(index + (bar_width/2), ('F. 1', 'F. 2', 'F. 3'))
     plt.ylim([0,1])
     plt.legend()
-    plt.savefig("bargraph"+name, format = 'svg')
+    plt.savefig("bargraph"+name+'.svg', format = 'svg')
 
     plt.show()
     

@@ -176,6 +176,7 @@ def trainAndPlot(clf, name):
     plt.xticks(range(width), alphabet[:width])
     #plt.xlabel('Prediction')
     plt.yticks(range(height), alphabet[:height])
+    plt.ylabel('Actual')
     plt.colorbar()
     plt.savefig("testconfusionmatrix"+name, format = 'svg')
 

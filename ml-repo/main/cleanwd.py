@@ -166,10 +166,11 @@ def trainAndPlot(clf, name):
     
     plt.yticks(range(height), alphabet[:height])
     plt.ylabel('Actual')
+    plt.colorbar()
     plt.savefig("trainconfusionmatrix"+name+'.png', format = 'png')
 
     
-    plt.colorbar()
+    
     plt.tight_layout()
 
 

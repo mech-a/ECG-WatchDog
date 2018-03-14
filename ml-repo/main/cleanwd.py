@@ -138,10 +138,14 @@ def trainAndPlot(clf, name):
 
     train_confusion_matrix = confusion_matrix(y_train, prediction_train)
     train_row_sums = train_confusion_matrix.sum(axis=1, keepdims=True)
+    print('train row sums')
+    print(train_row_sums)
     norm_train_confusion_matrix = train_confusion_matrix/train_row_sums
     
     test_confusion_matrix = confusion_matrix(y_test, prediction_test)
     test_row_sums = test_confusion_matrix.sum(axis=1, keepdims=True)
+    print('test row sums')
+    print(test_row_sums)
     norm_test_confusion_matrix = test_confusion_matrix/test_row_sums
 
 
@@ -159,6 +163,7 @@ def trainAndPlot(clf, name):
     plt.suptitle('Train Confusion Matrix of ' + name, fontsize=10, y=0.95)        
     plt.xticks(range(width), alphabet[:width])
     #plt.xlabel('Prediction')
+    
     plt.yticks(range(height), alphabet[:height])
     plt.ylabel('Actual')
     plt.savefig("trainconfusionmatrix"+name+'.png', format = 'png')

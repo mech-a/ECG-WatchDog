@@ -6,7 +6,7 @@ Created on Tue Mar 13 08:48:29 2018
 
 Clean WatchDog Code w/ funcs
 """
-# imports needed
+# imports needed for program
 import pandas as pd
 import matplotlib.pyplot as plt
 from sklearn import svm
@@ -20,41 +20,53 @@ from sklearn.multiclass import OneVsOneClassifier
 import numpy as np
 from sklearn.model_selection import GridSearchCV
 import itertools
-#import scipy.stats
-#from sklearn.model_selection import RandomizedSearchCV
+# import scipy.stats
+# from sklearn.model_selection import RandomizedSearchCV
 from sklearn.model_selection import StratifiedShuffleSplit
 
-#Set random seed so results stay consistent through runs
+# Set random seed so results stay consistent through runs
 np.random.seed(42)
 # Set data source
 
+# Link to pull data
 csv_data = "https://raw.githubusercontent.com/V3SUV1US/ECG-WatchDog/master/ml-repo/main/datasets/arrythmia-ds.csv"
-#csv_data = "C:\\Users\\gbhat\\OneDrive\\Desktop\\Projects\\Coding\\Git\\ECG-WatchDog\\ml-repo\\main\\datasets\\arrythmia-ds.csv"
+# Used
+# csv_data = "C:\\Users\\gbhat\\OneDrive\\Desktop\\Projects\\Coding\\Git\\ECG-WatchDog\\ml-repo\\main\\datasets\\arrythmia-ds.csv"
 
 
 # Labels
-heartdiseases = ('Normal', 'Ischemic changes', 'Old Anterior Myocardial Infarction', ' Old Inferior Myocardial Infarction ', 'Sinus tachycardy', 'Sinus bradycardy','Ventricular Premature Contraction',' Supraventricular Premature Contraction','Left bundle branch block','Right bundle branch block','Left ventricule hypertrophy','Atrial Fibrillation or Flutter', 'Others')
+heartdiseases = (
+'Normal', 'Ischemic changes', 'Old Anterior Myocardial Infarction', ' Old Inferior Myocardial Infarction ',
+'Sinus tachycardy', 'Sinus bradycardy', 'Ventricular Premature Contraction', ' Supraventricular Premature Contraction',
+'Left bundle branch block', 'Right bundle branch block', 'Left ventricule hypertrophy',
+'Atrial Fibrillation or Flutter', 'Others')
 y_pos = np.arange(len(heartdiseases))
-occurences = [245,44,15,15,13,25,3,2,9,50,4,5,22]
+# # of occurences of the above arrhythmias
+occurences = [245, 44, 15, 15, 13, 25, 3, 2, 9, 50, 4, 5, 22]
+
 
 def load_data():
     """Returns data with na values labelled"""
     return pd.read_csv(csv_data, na_values='?')
 
 
+# load raw ecg data
 raw_ecg_data = load_data()
+
 
 def normalizeData(ecg_data_to_normalize):
     """Takes raw ECG data and returns a dataset without labels and
     with na values filled"""
-    
+
     ecg_datawithoutlabel = ecg_data_to_normalize.drop('Identifier', axis=1)
     imputer = Imputer(missing_values="NaN", strategy='median')
     imputer.fit(ecg_datawithoutlabel)
     X = imputer.transform(ecg_datawithoutlabel)
     return X
 
+
 def histOfData():
+    """Creates a graph of the occurrences of the arrhythmias"""
     plt.barh(y_pos, occurences, align='center', alpha=0.5)
     plt.yticks(y_pos, heartdiseases)
     plt.ylabel('Diseases in the Dataset')
@@ -63,32 +75,39 @@ def histOfData():
 
 
 X = normalizeData(raw_ecg_data)
-split = StratifiedShuffleSplit(n_splits=1, test_size=0.2, random_state=42)
-for train_index, test_index in split.split(raw_ecg_data, raw_ecg_data["Identifier"]):
-    strat_train_set = raw_ecg_data.loc[train_index]
-    strat_test_set = raw_ecg_data.loc[test_index]
-for set_ in (strat_train_set, strat_test_set):
-    set_.drop("Identifier", axis=1, inplace=True)
+
+
+# fragment from testing of stratified shuffle
+# split = StratifiedShuffleSplit(n_splits=1, test_size=0.2, random_state=42)
+# for train_index, test_index in split.split(raw_ecg_data, raw_ecg_data["Identifier"]):
+#     strat_train_set = raw_ecg_data.loc[train_index]
+#     strat_test_set = raw_ecg_data.loc[test_index]
+# for set_ in (strat_train_set, strat_test_set):
+#     set_.drop("Identifier", axis=1, inplace=True)
+
+
 def splitSets(X):
     shuffle_index = np.random.permutation(361)
-    x_train, x_test, y_train, y_test = X[:361], X[361:], raw_ecg_data['Identifier'][:361], raw_ecg_data['Identifier'][361:]
+    x_train, x_test, y_train, y_test = X[:361], X[361:], raw_ecg_data['Identifier'][:361], raw_ecg_data['Identifier'][
+                                                                                           361:]
     x_train, y_train = x_train[shuffle_index], y_train[shuffle_index]
     return x_train, x_test, y_train, y_test
 
 
+# returns sets that are split in 4:1 configuration
 x_train, x_test, y_train, y_test = splitSets(X)
 
-ovo_clf= OneVsOneClassifier(SGDClassifier(max_iter=10, random_state=42, shuffle=True))
+# making our classifiers
+ovo_clf = OneVsOneClassifier(SGDClassifier(max_iter=10, random_state=42, shuffle=True))
 sgd_clf = SGDClassifier(max_iter=10, random_state=42, shuffle=True)
 dt_clf = DecisionTreeClassifier(max_depth=2, random_state=42)
 randfor_clf = RandomForestClassifier(bootstrap=True, class_weight=None, criterion='gini',
-            max_depth=None, max_features=6, max_leaf_nodes=None,
-            min_impurity_decrease=0.0, min_impurity_split=None,
-            min_samples_leaf=1, min_samples_split=2,
-            min_weight_fraction_leaf=0.0, n_estimators=30, n_jobs=1,
-            oob_score=False, random_state=42, verbose=0, warm_start=False)
-svc_clf = svm.SVC(random_state=42, C=1, kernel = 'linear')
-
+                                     max_depth=None, max_features=6, max_leaf_nodes=None,
+                                     min_impurity_decrease=0.0, min_impurity_split=None,
+                                     min_samples_leaf=1, min_samples_split=2,
+                                     min_weight_fraction_leaf=0.0, n_estimators=30, n_jobs=1,
+                                     oob_score=False, random_state=42, verbose=0, warm_start=False)
+svc_clf = svm.SVC(random_state=42, C=1, kernel='linear')
 
 """param_grid = [{'kernel': ['rbf'], 'gamma': [1e-3, 1e-4],
                      'C': [1, 10, 100, 1000]},
@@ -116,100 +135,91 @@ grid_search = GridSearchCV(randfor_clf, param_grid, cv=5,
 grid_search.fit(x_train, y_train)
 print(grid_search.best_params_ , grid_search.best_estimator_)
 """
-x = [(ovo_clf, 'One Vs One SGD'), (sgd_clf, 'One Vs All SGD'), (dt_clf, 'Decision Tree'), (randfor_clf, 'Random Forest'), (svc_clf, 'Support Vector Classifier')]
+
+# the list of tuples that are used in our for loop below; allows for sending both a string and a classifier
+x = [(ovo_clf, 'One Vs One SGD'), (sgd_clf, 'One Vs All SGD'), (dt_clf, 'Decision Tree'),
+     (randfor_clf, 'Random Forest'), (svc_clf, 'Support Vector Classifier')]
+
 
 def trainAndPlot(clf, name):
+    # train the classifier
     clf.fit(x_train, y_train)
+
+    # evalutate the scores
     train_score = cross_val_score(clf, x_train, y_train, cv=3, scoring='accuracy')
     test_score = cross_val_score(clf, x_test, y_test, cv=3, scoring='accuracy')
     mean_train_score = np.mean(train_score)
     mean_test_score = np.mean(test_score)
-
     print(name, 'train score')
     print(train_score)
     print(name, 'test score')
     print(test_score)
 
-
+    # get the classifier's predictions for the training set and the testing set
     prediction_train = cross_val_predict(clf, x_train, y_train, cv=3)
-    #prediction_train = clf.predict(x_train)
+    # prediction_train = clf.predict(x_train)
     prediction_test = cross_val_predict(clf, x_test, y_test, cv=3)
-    #prediction_test = clf.predict(x_test)
+    # prediction_test = clf.predict(x_test)
 
+    # plot the confusion matrices and normalize them
     train_confusion_matrix = confusion_matrix(y_train, prediction_train)
     train_row_sums = train_confusion_matrix.sum(axis=1, keepdims=True)
     print('train row sums')
     print(train_row_sums)
-    norm_train_confusion_matrix = train_confusion_matrix/train_row_sums
-    
+    norm_train_confusion_matrix = train_confusion_matrix / train_row_sums
+
     test_confusion_matrix = confusion_matrix(y_test, prediction_test)
     test_row_sums = test_confusion_matrix.sum(axis=1, keepdims=True)
     print('test row sums')
     print(test_row_sums)
-    norm_test_confusion_matrix = test_confusion_matrix/test_row_sums
+    norm_test_confusion_matrix = test_confusion_matrix / test_row_sums
 
-
-    #plt.xlabel("Actual Attribute")
-    #plt.ylabel("Predicted Attribute")
-    
-    
-    fig2, ax2 = plt.subplots()
+    # get the shape of the matrix and an alphabet string to label our axes with letters
     width, height = norm_train_confusion_matrix.shape
     alphabet = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'
-   
-    
-    plt.matshow(norm_train_confusion_matrix, cmap=plt.cm.cool)
-    plt.title('Prediction', y= 1.1)
-    plt.suptitle('Train Confusion Matrix of ' + name, fontsize=10, y=0.95)        
+
+    # create the train confusion matrix
+    plt.matshow(norm_train_confusion_matrix, cmap=plt.cm.gray)
+    plt.title('Prediction', y=1.1)
+    plt.suptitle('Train Confusion Matrix of ' + name, fontsize=10, y=0.95)
     plt.xticks(range(width), alphabet[:width])
-    #plt.xlabel('Prediction')
-    
+    # plt.xlabel('Prediction')
     plt.yticks(range(height), alphabet[:height])
     plt.ylabel('Actual')
     plt.colorbar()
-    plt.savefig("trainconfusionmatrix"+name+'.png', format = 'png')
+    plt.savefig("trainconfusionmatrix" + name + '.png', format='png')
 
-    
-    
-    plt.tight_layout()
-
-
-
-
-    plt.matshow(norm_test_confusion_matrix, cmap=plt.cm.cool)
-    plt.title('Prediction', y= 1.1)
+    # create the test confusion matrix
+    plt.matshow(norm_test_confusion_matrix, cmap=plt.cm.gray)
+    plt.title('Prediction', y=1.1)
     plt.suptitle('Test Confusion Matrix of ' + name, fontsize=10, y=0.95)
     plt.xticks(range(width), alphabet[:width])
-    #plt.xlabel('Prediction')
+    # plt.xlabel('Prediction')
     plt.yticks(range(height), alphabet[:height])
     plt.ylabel('Actual')
     plt.colorbar()
-    plt.savefig("testconfusionmatrix"+name+'.png', format = 'png')
+    plt.savefig("testconfusionmatrix" + name + '.png', format='png')
 
-    
-    
+    # plot the bar graph with scores
     index = np.arange(3)
     bar_width = 0.4
-    
+
     fig, ax = plt.subplots()
 
-    train_score_bars = plt.bar(index, train_score, bar_width, alpha = 0.3, color = 'b', label='Train Set Score')
+    train_score_bars = plt.bar(index, train_score, bar_width, alpha=0.3, color='b', label='Train Set Score')
     test_score_bars = plt.bar(index + bar_width, test_score, bar_width, alpha=0.3, color='r', label='Test Set Score')
-    
+
     plt.xlabel('Fold Number')
     plt.ylabel('Accuracy')
     plt.title('Train Accuracy vs. Test Accuracy of ' + name)
-    plt.xticks(index + (bar_width/2), ('F. 1', 'F. 2', 'F. 3'))
-    plt.ylim([0,1])
+    plt.xticks(index + (bar_width / 2), ('F. 1', 'F. 2', 'F. 3'))
+    plt.ylim([0, 1])
     plt.legend()
-    plt.savefig("bargraph"+name+'.png', format = 'png')
+    plt.savefig("bargraph" + name + '.png', format='png')
 
     plt.show()
-    
 
+
+# use a for loop to iterate over the list of tuples containing the classifiers and their names
 for i in x:
     trainAndPlot(i[0], i[1])
-
-
-
-#trainAndPlot(randfor_clf, 'support vector machine')

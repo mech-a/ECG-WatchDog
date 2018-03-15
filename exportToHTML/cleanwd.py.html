@@ -1,0 +1,249 @@
+<html>
+<head>
+<title>cleanwd.py</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<style type="text/css">
+.ln { color: #606366; font-weight: normal; font-style: normal; }
+.s0 { color: rgb(128,128,128); }
+.s1 { color: rgb(169,183,198); }
+.s2 { color: rgb(98,151,85); font-style: italic; }
+.s3 { color: rgb(204,120,50); }
+.s4 { color: rgb(104,151,187); }
+.s5 { color: rgb(106,135,89); }
+</style>
+</head>
+<BODY BGCOLOR="#2b2b2b">
+<TABLE CELLSPACING=0 CELLPADDING=5 COLS=1 WIDTH="100%" BGCOLOR="#606060" >
+<TR><TD><CENTER>
+<FONT FACE="Arial, Helvetica" COLOR="#000000">
+cleanwd.py</FONT>
+</center></TD></TR></TABLE>
+<pre>
+<span class="s0"># -*- coding: utf-8 -*-</span><span class="s1"> 
+</span><span class="s2">&quot;&quot;&quot; 
+Created on Tue Mar 13 08:48:29 2018 
+ 
+@author: gbhat 
+ 
+Clean WatchDog Code w/ funcs 
+&quot;&quot;&quot;</span><span class="s1"> 
+</span><span class="s0"># imports needed for program</span><span class="s1"> 
+</span><span class="s3">import </span><span class="s1">pandas </span><span class="s3">as </span><span class="s1">pd 
+</span><span class="s3">import </span><span class="s1">matplotlib.pyplot </span><span class="s3">as </span><span class="s1">plt 
+</span><span class="s3">from </span><span class="s1">sklearn </span><span class="s3">import </span><span class="s1">svm 
+</span><span class="s3">from </span><span class="s1">sklearn.ensemble </span><span class="s3">import </span><span class="s1">RandomForestClassifier 
+</span><span class="s3">from </span><span class="s1">sklearn.preprocessing </span><span class="s3">import </span><span class="s1">Imputer</span><span class="s3">, </span><span class="s1">StandardScaler 
+</span><span class="s3">from </span><span class="s1">sklearn.linear_model </span><span class="s3">import </span><span class="s1">SGDClassifier 
+</span><span class="s3">from </span><span class="s1">sklearn.model_selection </span><span class="s3">import </span><span class="s1">cross_val_predict</span><span class="s3">, </span><span class="s1">cross_val_score 
+</span><span class="s3">from </span><span class="s1">sklearn.metrics </span><span class="s3">import </span><span class="s1">confusion_matrix</span><span class="s3">, </span><span class="s1">precision_score</span><span class="s3">, </span><span class="s1">recall_score 
+</span><span class="s3">from </span><span class="s1">sklearn.tree </span><span class="s3">import </span><span class="s1">DecisionTreeClassifier 
+</span><span class="s3">from </span><span class="s1">sklearn.multiclass </span><span class="s3">import </span><span class="s1">OneVsOneClassifier 
+</span><span class="s3">import </span><span class="s1">numpy </span><span class="s3">as </span><span class="s1">np 
+</span><span class="s3">from </span><span class="s1">sklearn.model_selection </span><span class="s3">import </span><span class="s1">GridSearchCV 
+</span><span class="s3">import </span><span class="s1">itertools 
+</span><span class="s0"># import scipy.stats</span><span class="s1"> 
+</span><span class="s0"># from sklearn.model_selection import RandomizedSearchCV</span><span class="s1"> 
+</span><span class="s3">from </span><span class="s1">sklearn.model_selection </span><span class="s3">import </span><span class="s1">StratifiedShuffleSplit 
+ 
+</span><span class="s0"># Set random seed so results stay consistent through runs</span><span class="s1"> 
+np.random.seed(</span><span class="s4">42</span><span class="s1">) 
+</span><span class="s0"># Set data source</span><span class="s1"> 
+ 
+</span><span class="s0"># Link to pull data</span><span class="s1"> 
+csv_data = </span><span class="s5">&quot;https://raw.githubusercontent.com/V3SUV1US/ECG-WatchDog/master/ml-repo/main/datasets/arrythmia-ds.csv&quot;</span><span class="s1"> 
+</span><span class="s0"># Used</span><span class="s1"> 
+</span><span class="s0"># csv_data = &quot;C:\\Users\\gbhat\\OneDrive\\Desktop\\Projects\\Coding\\Git\\ECG-WatchDog\\ml-repo\\main\\datasets\\arrythmia-ds.csv&quot;</span><span class="s1"> 
+ 
+ 
+</span><span class="s0"># Labels</span><span class="s1"> 
+heartdiseases = ( 
+</span><span class="s5">'Normal'</span><span class="s3">, </span><span class="s5">'Ischemic changes'</span><span class="s3">, </span><span class="s5">'Old Anterior Myocardial Infarction'</span><span class="s3">, </span><span class="s5">' Old Inferior Myocardial Infarction '</span><span class="s3">,</span><span class="s1"> 
+</span><span class="s5">'Sinus tachycardy'</span><span class="s3">, </span><span class="s5">'Sinus bradycardy'</span><span class="s3">, </span><span class="s5">'Ventricular Premature Contraction'</span><span class="s3">, </span><span class="s5">' Supraventricular Premature Contraction'</span><span class="s3">,</span><span class="s1"> 
+</span><span class="s5">'Left bundle branch block'</span><span class="s3">, </span><span class="s5">'Right bundle branch block'</span><span class="s3">, </span><span class="s5">'Left ventricule hypertrophy'</span><span class="s3">,</span><span class="s1"> 
+</span><span class="s5">'Atrial Fibrillation or Flutter'</span><span class="s3">, </span><span class="s5">'Others'</span><span class="s1">) 
+y_pos = np.arange(len(heartdiseases)) 
+</span><span class="s0"># # of occurences of the above arrhythmias</span><span class="s1"> 
+occurences = [</span><span class="s4">245</span><span class="s3">, </span><span class="s4">44</span><span class="s3">, </span><span class="s4">15</span><span class="s3">, </span><span class="s4">15</span><span class="s3">, </span><span class="s4">13</span><span class="s3">, </span><span class="s4">25</span><span class="s3">, </span><span class="s4">3</span><span class="s3">, </span><span class="s4">2</span><span class="s3">, </span><span class="s4">9</span><span class="s3">, </span><span class="s4">50</span><span class="s3">, </span><span class="s4">4</span><span class="s3">, </span><span class="s4">5</span><span class="s3">, </span><span class="s4">22</span><span class="s1">] 
+ 
+ 
+</span><span class="s3">def </span><span class="s1">load_data(): 
+    </span><span class="s2">&quot;&quot;&quot;Returns data with na values labelled&quot;&quot;&quot;</span><span class="s1"> 
+    </span><span class="s3">return </span><span class="s1">pd.read_csv(csv_data</span><span class="s3">, </span><span class="s1">na_values=</span><span class="s5">'?'</span><span class="s1">) 
+ 
+ 
+</span><span class="s0"># load raw ecg data</span><span class="s1"> 
+raw_ecg_data = load_data() 
+ 
+ 
+</span><span class="s3">def </span><span class="s1">normalizeData(ecg_data_to_normalize): 
+    </span><span class="s2">&quot;&quot;&quot;Takes raw ECG data and returns a dataset without labels and 
+    with na values filled&quot;&quot;&quot;</span><span class="s1"> 
+ 
+    ecg_datawithoutlabel = ecg_data_to_normalize.drop(</span><span class="s5">'Identifier'</span><span class="s3">, </span><span class="s1">axis=</span><span class="s4">1</span><span class="s1">) 
+    imputer = Imputer(missing_values=</span><span class="s5">&quot;NaN&quot;</span><span class="s3">, </span><span class="s1">strategy=</span><span class="s5">'median'</span><span class="s1">) 
+    imputer.fit(ecg_datawithoutlabel) 
+    X = imputer.transform(ecg_datawithoutlabel) 
+    </span><span class="s3">return </span><span class="s1">X 
+ 
+ 
+</span><span class="s3">def </span><span class="s1">histOfData(): 
+    </span><span class="s2">&quot;&quot;&quot;Creates a graph of the occurrences of the arrhythmias&quot;&quot;&quot;</span><span class="s1"> 
+    plt.barh(y_pos</span><span class="s3">, </span><span class="s1">occurences</span><span class="s3">, </span><span class="s1">align=</span><span class="s5">'center'</span><span class="s3">, </span><span class="s1">alpha=</span><span class="s4">0.5</span><span class="s1">) 
+    plt.yticks(y_pos</span><span class="s3">, </span><span class="s1">heartdiseases) 
+    plt.ylabel(</span><span class="s5">'Diseases in the Dataset'</span><span class="s1">) 
+    plt.xlabel(</span><span class="s5">'# of Occurences'</span><span class="s1">) 
+    plt.title(</span><span class="s5">'UCI Arrythmia Dataset Bar Graph'</span><span class="s1">) 
+ 
+ 
+X = normalizeData(raw_ecg_data) 
+ 
+ 
+</span><span class="s0"># fragment from testing of stratified shuffle</span><span class="s1"> 
+</span><span class="s0"># split = StratifiedShuffleSplit(n_splits=1, test_size=0.2, random_state=42)</span><span class="s1"> 
+</span><span class="s0"># for train_index, test_index in split.split(raw_ecg_data, raw_ecg_data[&quot;Identifier&quot;]):</span><span class="s1"> 
+</span><span class="s0">#     strat_train_set = raw_ecg_data.loc[train_index]</span><span class="s1"> 
+</span><span class="s0">#     strat_test_set = raw_ecg_data.loc[test_index]</span><span class="s1"> 
+</span><span class="s0"># for set_ in (strat_train_set, strat_test_set):</span><span class="s1"> 
+</span><span class="s0">#     set_.drop(&quot;Identifier&quot;, axis=1, inplace=True)</span><span class="s1"> 
+ 
+ 
+</span><span class="s3">def </span><span class="s1">splitSets(X): 
+    shuffle_index = np.random.permutation(</span><span class="s4">361</span><span class="s1">) 
+    x_train</span><span class="s3">, </span><span class="s1">x_test</span><span class="s3">, </span><span class="s1">y_train</span><span class="s3">, </span><span class="s1">y_test = X[:</span><span class="s4">361</span><span class="s1">]</span><span class="s3">, </span><span class="s1">X[</span><span class="s4">361</span><span class="s1">:]</span><span class="s3">, </span><span class="s1">raw_ecg_data[</span><span class="s5">'Identifier'</span><span class="s1">][:</span><span class="s4">361</span><span class="s1">]</span><span class="s3">, </span><span class="s1">raw_ecg_data[</span><span class="s5">'Identifier'</span><span class="s1">][ 
+                                                                                           </span><span class="s4">361</span><span class="s1">:] 
+    x_train</span><span class="s3">, </span><span class="s1">y_train = x_train[shuffle_index]</span><span class="s3">, </span><span class="s1">y_train[shuffle_index] 
+    </span><span class="s3">return </span><span class="s1">x_train</span><span class="s3">, </span><span class="s1">x_test</span><span class="s3">, </span><span class="s1">y_train</span><span class="s3">, </span><span class="s1">y_test 
+ 
+ 
+</span><span class="s0"># returns sets that are split in 4:1 configuration</span><span class="s1"> 
+x_train</span><span class="s3">, </span><span class="s1">x_test</span><span class="s3">, </span><span class="s1">y_train</span><span class="s3">, </span><span class="s1">y_test = splitSets(X) 
+ 
+</span><span class="s0"># making our classifiers</span><span class="s1"> 
+ovo_clf = OneVsOneClassifier(SGDClassifier(max_iter=</span><span class="s4">10</span><span class="s3">, </span><span class="s1">random_state=</span><span class="s4">42</span><span class="s3">, </span><span class="s1">shuffle=</span><span class="s3">True</span><span class="s1">)) 
+sgd_clf = SGDClassifier(max_iter=</span><span class="s4">10</span><span class="s3">, </span><span class="s1">random_state=</span><span class="s4">42</span><span class="s3">, </span><span class="s1">shuffle=</span><span class="s3">True</span><span class="s1">) 
+dt_clf = DecisionTreeClassifier(max_depth=</span><span class="s4">2</span><span class="s3">, </span><span class="s1">random_state=</span><span class="s4">42</span><span class="s1">) 
+randfor_clf = RandomForestClassifier(bootstrap=</span><span class="s3">True, </span><span class="s1">class_weight=</span><span class="s3">None, </span><span class="s1">criterion=</span><span class="s5">'gini'</span><span class="s3">,</span><span class="s1"> 
+                                     max_depth=</span><span class="s3">None, </span><span class="s1">max_features=</span><span class="s4">6</span><span class="s3">, </span><span class="s1">max_leaf_nodes=</span><span class="s3">None,</span><span class="s1"> 
+                                     min_impurity_decrease=</span><span class="s4">0.0</span><span class="s3">, </span><span class="s1">min_impurity_split=</span><span class="s3">None,</span><span class="s1"> 
+                                     min_samples_leaf=</span><span class="s4">1</span><span class="s3">, </span><span class="s1">min_samples_split=</span><span class="s4">2</span><span class="s3">,</span><span class="s1"> 
+                                     min_weight_fraction_leaf=</span><span class="s4">0.0</span><span class="s3">, </span><span class="s1">n_estimators=</span><span class="s4">30</span><span class="s3">, </span><span class="s1">n_jobs=</span><span class="s4">1</span><span class="s3">,</span><span class="s1"> 
+                                     oob_score=</span><span class="s3">False, </span><span class="s1">random_state=</span><span class="s4">42</span><span class="s3">, </span><span class="s1">verbose=</span><span class="s4">0</span><span class="s3">, </span><span class="s1">warm_start=</span><span class="s3">False</span><span class="s1">) 
+svc_clf = svm.SVC(random_state=</span><span class="s4">42</span><span class="s3">, </span><span class="s1">C=</span><span class="s4">1</span><span class="s3">, </span><span class="s1">kernel=</span><span class="s5">'linear'</span><span class="s1">) 
+ 
+</span><span class="s5">&quot;&quot;&quot;param_grid = [{'kernel': ['rbf'], 'gamma': [1e-3, 1e-4], 
+                     'C': [1, 10, 100, 1000]}, 
+                    {'kernel': ['linear'], 'C': [1, 10, 100, 1000]}] 
+param_random= {'C': scipy.stats.expon(scale=100), 'gamma': scipy.stats.expon(scale=.1), 
+  'kernel': ['rbf'], 'class_weight':['balanced', None]} 
+grid_search = GridSearchCV(svc_clf, param_grid, cv=5, 
+                           scoring='accuracy', return_train_score=True) 
+randomized_search = GridSearchCV(svc_clf, param_grid, cv=5, 
+                           scoring='accuracy', return_train_score=True) 
+grid_search.fit(x_train, y_train) 
+randomized_search.fit(x_train, y_train) 
+print(grid_search.best_params_) 
+print(randomized_search.best_params_) 
+ 
+param_grid = [ 
+    # try 12 (3×4) combinations of hyperparameters 
+    {'n_estimators': [3, 10, 30], 'max_features': [2, 4, 6, 8]}, 
+    # then try 6 (2×3) combinations with bootstrap set as False 
+    { 'n_estimators': [3, 10], 'max_features': [2, 3, 4]}, 
+  ] 
+# train across 5 folds, that's a total of (12+6)*5=90 rounds of training  
+grid_search = GridSearchCV(randfor_clf, param_grid, cv=5, 
+                           scoring='accuracy', return_train_score=True) 
+grid_search.fit(x_train, y_train) 
+print(grid_search.best_params_ , grid_search.best_estimator_) 
+&quot;&quot;&quot;</span><span class="s1"> 
+ 
+</span><span class="s0"># the list of tuples that are used in our for loop below; allows for sending both a string and a classifier</span><span class="s1"> 
+x = [(ovo_clf</span><span class="s3">, </span><span class="s5">'One Vs One SGD'</span><span class="s1">)</span><span class="s3">, </span><span class="s1">(sgd_clf</span><span class="s3">, </span><span class="s5">'One Vs All SGD'</span><span class="s1">)</span><span class="s3">, </span><span class="s1">(dt_clf</span><span class="s3">, </span><span class="s5">'Decision Tree'</span><span class="s1">)</span><span class="s3">,</span><span class="s1"> 
+     (randfor_clf</span><span class="s3">, </span><span class="s5">'Random Forest'</span><span class="s1">)</span><span class="s3">, </span><span class="s1">(svc_clf</span><span class="s3">, </span><span class="s5">'Support Vector Classifier'</span><span class="s1">)] 
+ 
+ 
+</span><span class="s3">def </span><span class="s1">trainAndPlot(clf</span><span class="s3">, </span><span class="s1">name): 
+    </span><span class="s0"># train the classifier</span><span class="s1"> 
+    clf.fit(x_train</span><span class="s3">, </span><span class="s1">y_train) 
+ 
+    </span><span class="s0"># evalutate the scores</span><span class="s1"> 
+    train_score = cross_val_score(clf</span><span class="s3">, </span><span class="s1">x_train</span><span class="s3">, </span><span class="s1">y_train</span><span class="s3">, </span><span class="s1">cv=</span><span class="s4">3</span><span class="s3">, </span><span class="s1">scoring=</span><span class="s5">'accuracy'</span><span class="s1">) 
+    test_score = cross_val_score(clf</span><span class="s3">, </span><span class="s1">x_test</span><span class="s3">, </span><span class="s1">y_test</span><span class="s3">, </span><span class="s1">cv=</span><span class="s4">3</span><span class="s3">, </span><span class="s1">scoring=</span><span class="s5">'accuracy'</span><span class="s1">) 
+    mean_train_score = np.mean(train_score) 
+    mean_test_score = np.mean(test_score) 
+    print(name</span><span class="s3">, </span><span class="s5">'train score'</span><span class="s1">) 
+    print(train_score) 
+    print(name</span><span class="s3">, </span><span class="s5">'test score'</span><span class="s1">) 
+    print(test_score) 
+ 
+    </span><span class="s0"># get the classifier's predictions for the training set and the testing set</span><span class="s1"> 
+    prediction_train = cross_val_predict(clf</span><span class="s3">, </span><span class="s1">x_train</span><span class="s3">, </span><span class="s1">y_train</span><span class="s3">, </span><span class="s1">cv=</span><span class="s4">3</span><span class="s1">) 
+    </span><span class="s0"># prediction_train = clf.predict(x_train)</span><span class="s1"> 
+    prediction_test = cross_val_predict(clf</span><span class="s3">, </span><span class="s1">x_test</span><span class="s3">, </span><span class="s1">y_test</span><span class="s3">, </span><span class="s1">cv=</span><span class="s4">3</span><span class="s1">) 
+    </span><span class="s0"># prediction_test = clf.predict(x_test)</span><span class="s1"> 
+ 
+    </span><span class="s0"># plot the confusion matrices and normalize them</span><span class="s1"> 
+    train_confusion_matrix = confusion_matrix(y_train</span><span class="s3">, </span><span class="s1">prediction_train) 
+    train_row_sums = train_confusion_matrix.sum(axis=</span><span class="s4">1</span><span class="s3">, </span><span class="s1">keepdims=</span><span class="s3">True</span><span class="s1">) 
+    print(</span><span class="s5">'train row sums'</span><span class="s1">) 
+    print(train_row_sums) 
+    norm_train_confusion_matrix = train_confusion_matrix / train_row_sums 
+ 
+    test_confusion_matrix = confusion_matrix(y_test</span><span class="s3">, </span><span class="s1">prediction_test) 
+    test_row_sums = test_confusion_matrix.sum(axis=</span><span class="s4">1</span><span class="s3">, </span><span class="s1">keepdims=</span><span class="s3">True</span><span class="s1">) 
+    print(</span><span class="s5">'test row sums'</span><span class="s1">) 
+    print(test_row_sums) 
+    norm_test_confusion_matrix = test_confusion_matrix / test_row_sums 
+ 
+    </span><span class="s0"># get the shape of the matrix and an alphabet string to label our axes with letters</span><span class="s1"> 
+    width</span><span class="s3">, </span><span class="s1">height = norm_train_confusion_matrix.shape 
+    alphabet = </span><span class="s5">'ABCDEFGHIJKLMNOPQRSTUVWXYZ'</span><span class="s1"> 
+ 
+    </span><span class="s0"># create the train confusion matrix</span><span class="s1"> 
+    plt.matshow(norm_train_confusion_matrix</span><span class="s3">, </span><span class="s1">cmap=plt.cm.gray) 
+    plt.title(</span><span class="s5">'Prediction'</span><span class="s3">, </span><span class="s1">y=</span><span class="s4">1.1</span><span class="s1">) 
+    plt.suptitle(</span><span class="s5">'Train Confusion Matrix of ' </span><span class="s1">+ name</span><span class="s3">, </span><span class="s1">fontsize=</span><span class="s4">10</span><span class="s3">, </span><span class="s1">y=</span><span class="s4">0.95</span><span class="s1">) 
+    plt.xticks(range(width)</span><span class="s3">, </span><span class="s1">alphabet[:width]) 
+    </span><span class="s0"># plt.xlabel('Prediction')</span><span class="s1"> 
+    plt.yticks(range(height)</span><span class="s3">, </span><span class="s1">alphabet[:height]) 
+    plt.ylabel(</span><span class="s5">'Actual'</span><span class="s1">) 
+    plt.colorbar() 
+    plt.savefig(</span><span class="s5">&quot;trainconfusionmatrix&quot; </span><span class="s1">+ name + </span><span class="s5">'.png'</span><span class="s3">, </span><span class="s1">format=</span><span class="s5">'png'</span><span class="s1">) 
+ 
+    </span><span class="s0"># create the test confusion matrix</span><span class="s1"> 
+    plt.matshow(norm_test_confusion_matrix</span><span class="s3">, </span><span class="s1">cmap=plt.cm.gray) 
+    plt.title(</span><span class="s5">'Prediction'</span><span class="s3">, </span><span class="s1">y=</span><span class="s4">1.1</span><span class="s1">) 
+    plt.suptitle(</span><span class="s5">'Test Confusion Matrix of ' </span><span class="s1">+ name</span><span class="s3">, </span><span class="s1">fontsize=</span><span class="s4">10</span><span class="s3">, </span><span class="s1">y=</span><span class="s4">0.95</span><span class="s1">) 
+    plt.xticks(range(width)</span><span class="s3">, </span><span class="s1">alphabet[:width]) 
+    </span><span class="s0"># plt.xlabel('Prediction')</span><span class="s1"> 
+    plt.yticks(range(height)</span><span class="s3">, </span><span class="s1">alphabet[:height]) 
+    plt.ylabel(</span><span class="s5">'Actual'</span><span class="s1">) 
+    plt.colorbar() 
+    plt.savefig(</span><span class="s5">&quot;testconfusionmatrix&quot; </span><span class="s1">+ name + </span><span class="s5">'.png'</span><span class="s3">, </span><span class="s1">format=</span><span class="s5">'png'</span><span class="s1">) 
+ 
+    </span><span class="s0"># plot the bar graph with scores</span><span class="s1"> 
+    index = np.arange(</span><span class="s4">3</span><span class="s1">) 
+    bar_width = </span><span class="s4">0.4</span><span class="s1"> 
+ 
+    fig</span><span class="s3">, </span><span class="s1">ax = plt.subplots() 
+ 
+    train_score_bars = plt.bar(index</span><span class="s3">, </span><span class="s1">train_score</span><span class="s3">, </span><span class="s1">bar_width</span><span class="s3">, </span><span class="s1">alpha=</span><span class="s4">0.3</span><span class="s3">, </span><span class="s1">color=</span><span class="s5">'b'</span><span class="s3">, </span><span class="s1">label=</span><span class="s5">'Train Set Score'</span><span class="s1">) 
+    test_score_bars = plt.bar(index + bar_width</span><span class="s3">, </span><span class="s1">test_score</span><span class="s3">, </span><span class="s1">bar_width</span><span class="s3">, </span><span class="s1">alpha=</span><span class="s4">0.3</span><span class="s3">, </span><span class="s1">color=</span><span class="s5">'r'</span><span class="s3">, </span><span class="s1">label=</span><span class="s5">'Test Set Score'</span><span class="s1">) 
+ 
+    plt.xlabel(</span><span class="s5">'Fold Number'</span><span class="s1">) 
+    plt.ylabel(</span><span class="s5">'Accuracy'</span><span class="s1">) 
+    plt.title(</span><span class="s5">'Train Accuracy vs. Test Accuracy of ' </span><span class="s1">+ name) 
+    plt.xticks(index + (bar_width / </span><span class="s4">2</span><span class="s1">)</span><span class="s3">, </span><span class="s1">(</span><span class="s5">'F. 1'</span><span class="s3">, </span><span class="s5">'F. 2'</span><span class="s3">, </span><span class="s5">'F. 3'</span><span class="s1">)) 
+    plt.ylim([</span><span class="s4">0</span><span class="s3">, </span><span class="s4">1</span><span class="s1">]) 
+    plt.legend() 
+    plt.savefig(</span><span class="s5">&quot;bargraph&quot; </span><span class="s1">+ name + </span><span class="s5">'.png'</span><span class="s3">, </span><span class="s1">format=</span><span class="s5">'png'</span><span class="s1">) 
+ 
+    plt.show() 
+ 
+ 
+</span><span class="s0"># use a for loop to iterate over the list of tuples containing the classifiers and their names</span><span class="s1"> 
+</span><span class="s3">for </span><span class="s1">i </span><span class="s3">in </span><span class="s1">x: 
+    trainAndPlot(i[</span><span class="s4">0</span><span class="s1">]</span><span class="s3">, </span><span class="s1">i[</span><span class="s4">1</span><span class="s1">]) 
+</span></pre>
+</body>
+</html>

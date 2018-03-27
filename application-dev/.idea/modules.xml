@@ -2,7 +2,7 @@
 <project version="4">
   <component name="ProjectModuleManager">
     <modules>
-      <module fileurl="file://$PROJECT_DIR$/JavaWorkspaceIJ.iml" filepath="$PROJECT_DIR$/JavaWorkspaceIJ.iml" />
+      <module fileurl="file://$PROJECT_DIR$/application-dev.iml" filepath="$PROJECT_DIR$/application-dev.iml" />
     </modules>
   </component>
 </project>
